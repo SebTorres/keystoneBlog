@@ -55,7 +55,8 @@ var lists = {
       createdAt: (0, import_fields.timestamp)({
         // this sets the timestamp to Date.now() when the user is first created
         defaultValue: { kind: "now" }
-      })
+      }),
+      isAdmin: (0, import_fields.checkbox)()
     }
   }),
   Post: (0, import_core.list)({
@@ -112,6 +113,48 @@ var lists = {
           inlineConnect: true,
           inlineCreate: { fields: ["name"] }
         }
+      }),
+      // with this field, you can add some Genres to Posts
+      genre: (0, import_fields.relationship)({
+        // we could have used 'Tag', but then the relationship would only be 1-way
+        ref: "Genre.posts",
+        // a Post can have many Genres, not just one
+        many: true,
+        // this is some customisations for changing how this will look in the AdminUI
+        ui: {
+          displayMode: "cards",
+          cardFields: ["name"],
+          inlineEdit: { fields: ["name"] },
+          linkToItem: true,
+          inlineConnect: true,
+          inlineCreate: { fields: ["name"] }
+        }
+      }),
+      score: (0, import_fields.integer)({
+        defaultValue: 1,
+        validation: {
+          isRequired: true,
+          min: 1,
+          max: 10
+        }
+      }),
+      status: (0, import_fields.select)({
+        type: "enum",
+        options: [
+          { label: "draft", value: "Draft" },
+          { label: "published", value: "Published" },
+          { label: "archived", value: "Archived" }
+        ],
+        defaultValue: "Draft",
+        validation: { isRequired: true }
+      }),
+      complexity: (0, import_fields.integer)({
+        defaultValue: 1,
+        validation: {
+          isRequired: true,
+          min: 1,
+          max: 5
+        }
       })
     }
   }),
@@ -121,7 +164,12 @@ var lists = {
     //   for this starter project, anyone can create, query, update and delete anything
     //   if you want to prevent random people on the internet from accessing your data,
     //   you can find out more at https://keystonejs.com/docs/guides/auth-and-access-control
-    access: import_access.allowAll,
+    access: {
+      operation: {
+        ...(0, import_access.allOperations)(import_access.denyAll),
+        query: ({ session: session2, context, listKey, operation }) => true
+      }
+    },
     // setting this to isHidden for the user interface prevents this list being visible in the Admin UI
     ui: {
       isHidden: true
@@ -131,6 +179,25 @@ var lists = {
       name: (0, import_fields.text)(),
       // this can be helpful to find out all the Posts associated with a Tag
       posts: (0, import_fields.relationship)({ ref: "Post.tags", many: true })
+    }
+  }),
+  // this last list is our Tag list, it only has a name field for now
+  Genre: (0, import_core.list)({
+    access: {
+      operation: {
+        ...(0, import_access.allOperations)(import_access.denyAll),
+        query: ({ session: session2, context, listKey, operation }) => true
+      }
+    },
+    // setting this to isHidden for the user interface prevents this list being visible in the Admin UI
+    ui: {
+      isHidden: true
+    },
+    // this is the fields for our Tag list
+    fields: {
+      name: (0, import_fields.text)(),
+      // this can be helpful to find out all the Posts associated with a Tag
+      posts: (0, import_fields.relationship)({ ref: "Post.genre", many: true })
     }
   })
 };
@@ -149,7 +216,7 @@ var { withAuth } = (0, import_auth.createAuth)({
   // this is a GraphQL query fragment for fetching what data will be attached to a context.session
   //   this can be helpful for when you are writing your access control functions
   //   you can find out more at https://keystonejs.com/docs/guides/auth-and-access-control
-  sessionData: "name createdAt",
+  sessionData: "name createdAt isAdmin",
   secretField: "password",
   // WARNING: remove initFirstItem functionality in production
   //   see https://keystonejs.com/docs/config/auth#init-first-item for more

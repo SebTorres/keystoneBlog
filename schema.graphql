@@ -141,10 +141,21 @@ type Post {
   author: User
   tags(where: TagWhereInput! = {}, orderBy: [TagOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: TagWhereUniqueInput): [Tag!]
   tagsCount(where: TagWhereInput! = {}): Int
+  genre(where: GenreWhereInput! = {}, orderBy: [GenreOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: GenreWhereUniqueInput): [Genre!]
+  genreCount(where: GenreWhereInput! = {}): Int
+  score: Int
+  status: PostStatusType
+  complexity: Int
 }
 
 type Post_content_Document {
   document(hydrateRelationships: Boolean! = false): JSON!
+}
+
+enum PostStatusType {
+  Draft
+  Published
+  Archived
 }
 
 input PostWhereUniqueInput {
@@ -159,6 +170,10 @@ input PostWhereInput {
   title: StringFilter
   author: UserWhereInput
   tags: TagManyRelationFilter
+  genre: GenreManyRelationFilter
+  score: IntFilter
+  status: PostStatusTypeNullableFilter
+  complexity: IntFilter
 }
 
 input TagManyRelationFilter {
@@ -167,9 +182,36 @@ input TagManyRelationFilter {
   none: TagWhereInput
 }
 
+input GenreManyRelationFilter {
+  every: GenreWhereInput
+  some: GenreWhereInput
+  none: GenreWhereInput
+}
+
+input IntFilter {
+  equals: Int
+  in: [Int!]
+  notIn: [Int!]
+  lt: Int
+  lte: Int
+  gt: Int
+  gte: Int
+  not: IntFilter
+}
+
+input PostStatusTypeNullableFilter {
+  equals: PostStatusType
+  in: [PostStatusType!]
+  notIn: [PostStatusType!]
+  not: PostStatusTypeNullableFilter
+}
+
 input PostOrderByInput {
   id: OrderDirection
   title: OrderDirection
+  score: OrderDirection
+  status: OrderDirection
+  complexity: OrderDirection
 }
 
 input PostUpdateInput {
@@ -177,6 +219,10 @@ input PostUpdateInput {
   content: JSON
   author: UserRelateToOneForUpdateInput
   tags: TagRelateToManyForUpdateInput
+  genre: GenreRelateToManyForUpdateInput
+  score: Int
+  status: PostStatusType
+  complexity: Int
 }
 
 input UserRelateToOneForUpdateInput {
@@ -192,6 +238,13 @@ input TagRelateToManyForUpdateInput {
   connect: [TagWhereUniqueInput!]
 }
 
+input GenreRelateToManyForUpdateInput {
+  disconnect: [GenreWhereUniqueInput!]
+  set: [GenreWhereUniqueInput!]
+  create: [GenreCreateInput!]
+  connect: [GenreWhereUniqueInput!]
+}
+
 input PostUpdateArgs {
   where: PostWhereUniqueInput!
   data: PostUpdateInput!
@@ -202,6 +255,10 @@ input PostCreateInput {
   content: JSON
   author: UserRelateToOneForCreateInput
   tags: TagRelateToManyForCreateInput
+  genre: GenreRelateToManyForCreateInput
+  score: Int
+  status: PostStatusType
+  complexity: Int
 }
 
 input UserRelateToOneForCreateInput {
@@ -212,6 +269,11 @@ input UserRelateToOneForCreateInput {
 input TagRelateToManyForCreateInput {
   create: [TagCreateInput!]
   connect: [TagWhereUniqueInput!]
+}
+
+input GenreRelateToManyForCreateInput {
+  create: [GenreCreateInput!]
+  connect: [GenreWhereUniqueInput!]
 }
 
 type Tag {
@@ -254,6 +316,46 @@ input TagCreateInput {
   posts: PostRelateToManyForCreateInput
 }
 
+type Genre {
+  id: ID!
+  name: String
+  posts(where: PostWhereInput! = {}, orderBy: [PostOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: PostWhereUniqueInput): [Post!]
+  postsCount(where: PostWhereInput! = {}): Int
+}
+
+input GenreWhereUniqueInput {
+  id: ID
+}
+
+input GenreWhereInput {
+  AND: [GenreWhereInput!]
+  OR: [GenreWhereInput!]
+  NOT: [GenreWhereInput!]
+  id: IDFilter
+  name: StringFilter
+  posts: PostManyRelationFilter
+}
+
+input GenreOrderByInput {
+  id: OrderDirection
+  name: OrderDirection
+}
+
+input GenreUpdateInput {
+  name: String
+  posts: PostRelateToManyForUpdateInput
+}
+
+input GenreUpdateArgs {
+  where: GenreWhereUniqueInput!
+  data: GenreUpdateInput!
+}
+
+input GenreCreateInput {
+  name: String
+  posts: PostRelateToManyForCreateInput
+}
+
 """
 The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
 """
@@ -278,6 +380,12 @@ type Mutation {
   updateTags(data: [TagUpdateArgs!]!): [Tag]
   deleteTag(where: TagWhereUniqueInput!): Tag
   deleteTags(where: [TagWhereUniqueInput!]!): [Tag]
+  createGenre(data: GenreCreateInput!): Genre
+  createGenres(data: [GenreCreateInput!]!): [Genre]
+  updateGenre(where: GenreWhereUniqueInput!, data: GenreUpdateInput!): Genre
+  updateGenres(data: [GenreUpdateArgs!]!): [Genre]
+  deleteGenre(where: GenreWhereUniqueInput!): Genre
+  deleteGenres(where: [GenreWhereUniqueInput!]!): [Genre]
   endSession: Boolean!
   authenticateUserWithPassword(email: String!, password: String!): UserAuthenticationWithPasswordResult
   createInitialUser(data: CreateInitialUserInput!): UserAuthenticationWithPasswordSuccess!
@@ -310,6 +418,9 @@ type Query {
   tags(where: TagWhereInput! = {}, orderBy: [TagOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: TagWhereUniqueInput): [Tag!]
   tag(where: TagWhereUniqueInput!): Tag
   tagsCount(where: TagWhereInput! = {}): Int
+  genres(where: GenreWhereInput! = {}, orderBy: [GenreOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: GenreWhereUniqueInput): [Genre!]
+  genre(where: GenreWhereUniqueInput!): Genre
+  genresCount(where: GenreWhereInput! = {}): Int
   keystone: KeystoneMeta!
   authenticatedItem: AuthenticatedItem
 }
